@@ -4,6 +4,7 @@ from order_book.__about__ import __version__
 from order_book.core import (
     ClientOrderBookQueryResult,
     ClientOrderBookRow,
+    CompositeOrderBook,
     EventHub,
     EventPort,
     EventSubscriber,
@@ -23,6 +24,7 @@ from order_book.core import (
 __all__ = [
     "ClientOrderBookQueryResult",
     "ClientOrderBookRow",
+    "CompositeOrderBook",
     "EventHub",
     "EventPort",
     "EventSubscriber",
