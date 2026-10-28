@@ -14,11 +14,15 @@
 
 from collections.abc import Callable, Iterator
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from order_book.core.events import OrderBookTradeEvent
 from order_book.core.message import OrderBookMessage
 from order_book.core.types import OrderBookQueryResult, OrderBookRow
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
 
 EventSubscriber = Callable[[Any], None]
 
@@ -97,3 +101,21 @@ class OrderBookProtocol(Protocol):
     def get_volume_for_price(self, is_buy: bool, price: float) -> OrderBookQueryResult: ...
 
     def get_quote_volume_for_price(self, is_buy: bool, price: float) -> OrderBookQueryResult: ...
+
+
+@runtime_checkable
+class FramesOrderBookProtocol(OrderBookProtocol, Protocol):
+    """``OrderBookProtocol`` plus the numpy/pandas surface (``hb-order-book[frames]``)."""
+
+    @property
+    def snapshot(self) -> "tuple[pd.DataFrame, pd.DataFrame]": ...
+
+    def apply_pandas_diffs(self, bids_df: "pd.DataFrame", asks_df: "pd.DataFrame") -> None: ...
+
+    def apply_numpy_diffs(
+        self, bids_array: "np.ndarray[Any, Any]", asks_array: "np.ndarray[Any, Any]"
+    ) -> None: ...
+
+    def apply_numpy_snapshot(
+        self, bids_array: "np.ndarray[Any, Any]", asks_array: "np.ndarray[Any, Any]"
+    ) -> None: ...
