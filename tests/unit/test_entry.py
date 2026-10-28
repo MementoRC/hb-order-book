@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from order_book import OrderBookEntry, PriceLevels, truncate_overlap_entries
+from order_book.core.entry import OrderBookEntry, PriceLevels, truncate_overlap_entries
 
 
 def levels(*rows: tuple[float, float, int]) -> PriceLevels:

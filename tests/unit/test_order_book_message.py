@@ -2,7 +2,8 @@
 
 import time
 
-from order_book import OrderBookMessage, OrderBookMessageType, OrderBookRow
+from order_book.core.message import OrderBookMessage, OrderBookMessageType
+from order_book.core.types import OrderBookRow
 
 
 def _msg(kind: OrderBookMessageType, content: dict, ts: float | None = None) -> OrderBookMessage:
