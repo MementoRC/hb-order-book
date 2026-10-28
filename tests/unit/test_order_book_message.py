@@ -1,0 +1,122 @@
+"""Ported from hummingbot core test_order_book_message.py, plus __hash__ contract."""
+
+import time
+
+from order_book import OrderBookMessage, OrderBookMessageType, OrderBookRow
+
+
+def _msg(kind: OrderBookMessageType, content: dict, ts: float | None = None) -> OrderBookMessage:
+    return OrderBookMessage(
+        message_type=kind, content=content, timestamp=time.time() if ts is None else ts
+    )
+
+
+def test_update_id() -> None:
+    update_id = "someId"
+    assert _msg(OrderBookMessageType.SNAPSHOT, {"update_id": update_id}).update_id == update_id
+    assert _msg(OrderBookMessageType.DIFF, {"update_id": update_id}).update_id == update_id
+    assert _msg(OrderBookMessageType.TRADE, {"someKey": "someValue"}).update_id == -1
+
+
+def test_first_update_id() -> None:
+    assert _msg(OrderBookMessageType.SNAPSHOT, {"someKey": "v"}).first_update_id == -1
+    msg = _msg(
+        OrderBookMessageType.DIFF, {"update_id": "someId", "first_update_id": "firstUpdateId"}
+    )
+    assert msg.first_update_id == "firstUpdateId"
+    assert _msg(OrderBookMessageType.TRADE, {"someKey": "v"}).first_update_id == -1
+
+
+def test_trade_id() -> None:
+    assert _msg(OrderBookMessageType.SNAPSHOT, {"someKey": "v"}).trade_id == -1
+    assert _msg(OrderBookMessageType.DIFF, {"someKey": "v"}).trade_id == -1
+    assert _msg(OrderBookMessageType.TRADE, {"trade_id": "someTradeId"}).trade_id == "someTradeId"
+
+
+def test_trading_pair() -> None:
+    msg = _msg(OrderBookMessageType.SNAPSHOT, {"trading_pair": "BTC-USDT"})
+    assert msg.trading_pair == "BTC-USDT"
+
+
+def test_bids_and_asks() -> None:
+    update_id = "someId"
+    msg = _msg(
+        OrderBookMessageType.SNAPSHOT,
+        {"update_id": update_id, "asks": [(1, 2), (3, 4)], "bids": [(5, 6), (7, 8)]},
+    )
+    asks = msg.asks
+    assert len(asks) == 2
+    assert isinstance(asks[0], OrderBookRow)
+    assert (asks[0].price, asks[0].amount, asks[0].update_id) == (1, 2, update_id)
+
+    bids = msg.bids
+    assert len(bids) == 2
+    assert isinstance(bids[0], OrderBookRow)
+    assert (bids[0].price, bids[0].amount, bids[0].update_id) == (5, 6, update_id)
+
+
+def test_has_update_id() -> None:
+    assert _msg(OrderBookMessageType.SNAPSHOT, {"update_id": "x"}).has_update_id
+    assert _msg(OrderBookMessageType.DIFF, {"update_id": "x"}).has_update_id
+    assert not _msg(OrderBookMessageType.TRADE, {"someKey": "v"}).has_update_id
+
+
+def test_has_trade_id() -> None:
+    assert not _msg(OrderBookMessageType.SNAPSHOT, {"someKey": "v"}).has_trade_id
+    assert not _msg(OrderBookMessageType.DIFF, {"someKey": "v"}).has_trade_id
+    assert _msg(OrderBookMessageType.TRADE, {"trade_id": "t"}).has_trade_id
+
+
+def test_equality() -> None:
+    upd = {"update_id": "someId"}
+    trd = {"trade_id": "someTradeId"}
+    snapshot1 = _msg(OrderBookMessageType.SNAPSHOT, upd)
+    snapshot2 = _msg(OrderBookMessageType.SNAPSHOT, upd)
+    diff1 = _msg(OrderBookMessageType.DIFF, upd)
+    diff2 = _msg(OrderBookMessageType.DIFF, upd)
+    trade1 = _msg(OrderBookMessageType.TRADE, trd)
+    trade2 = _msg(OrderBookMessageType.TRADE, trd)
+
+    assert snapshot1 != diff1
+    assert snapshot1 != trade1
+    assert diff1 != trade1
+    assert snapshot1 == snapshot2
+    assert diff1 == diff2
+    assert trade1 == trade2
+
+
+def test_equality_with_foreign_type() -> None:
+    msg = _msg(OrderBookMessageType.DIFF, {"update_id": 1})
+    assert msg != "not a message"
+    assert msg.__eq__(object()) is NotImplemented
+
+
+def test_larger_than() -> None:
+    t = time.time()
+    trade1 = _msg(OrderBookMessageType.TRADE, {"trade_id": 5}, t)
+    trade2 = _msg(OrderBookMessageType.TRADE, {"trade_id": 6}, time.time() + 1)
+    snapshot1 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 1}, time.time() + 2)
+    snapshot2 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 3}, time.time() + 3)
+    diff1 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, time.time() + 4)
+    diff2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, t)
+
+    assert trade1 < trade2  # based on id
+    assert snapshot1 < snapshot2  # based on id
+    assert snapshot1 < diff1  # based on id
+    assert diff1 < snapshot2  # based on id
+    assert trade1 < snapshot1  # based on timestamp
+    assert diff2 < trade1  # if same ts, ob messages < trade messages
+
+
+def test_hash_is_consistent_with_equality() -> None:
+    snapshot1 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7}, 1.0)
+    snapshot2 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7, "x": 1}, 2.0)
+    diff = _msg(OrderBookMessageType.DIFF, {"update_id": 7})
+    trade1 = _msg(OrderBookMessageType.TRADE, {"trade_id": 9})
+    trade2 = _msg(OrderBookMessageType.TRADE, {"trade_id": 9}, 5.0)
+
+    assert snapshot1 == snapshot2
+    assert hash(snapshot1) == hash(snapshot2)
+    assert hash(trade1) == hash(trade2)
+    assert len({snapshot1, snapshot2, diff, trade1, trade2}) == 3
+    assert {trade1: "a"}[trade2] == "a"
