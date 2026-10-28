@@ -32,6 +32,8 @@ pixi run check     # lint + format-check + typecheck + coverage
 ```
 
 Work in `.worktrees/<branch>` cut from `origin/development`; open PRs against `development`.
+`development` is the default branch; `main` only receives PRs from `development`.
+Both are protected and require the `CI Success` check. Commits are GPG-signed.
 
 ## License
 
