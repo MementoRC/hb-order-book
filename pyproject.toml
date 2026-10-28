@@ -8,7 +8,12 @@ dynamic = ["version"]
 description = "Hummingbot OrderBook extracted as standalone L2 domain sub-package"
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
-dependencies = []
+dependencies = [
+    "hb-data-type-primitives @ git+https://github.com/MementoRC/hb-data-type-primitives.git@v0.1.0",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.version]
 path = "order_book/__about__.py"
@@ -97,6 +102,11 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 warn_unused_ignores = true
 
+# hb-data-type-primitives v0.1.0 ships no py.typed marker.
+[[tool.mypy.overrides]]
+module = ["data_type_primitives"]
+ignore_missing_imports = true
+
 [tool.coverage.run]
 branch = true
 source_pkgs = ["order_book"]
@@ -111,5 +121,9 @@ exclude_lines = ["no cov", "if __name__", "if TYPE_CHECKING", "raise NotImplemen
 exclude_also = ['^\s*\.\.\.\s*$', ':\s*\.\.\.\s*$']
 
 [tool.hummingbot.supersedes]
-modules = []
-test_paths = []
+modules = [
+    "hummingbot.core.data_type.order_book_row",
+    "hummingbot.core.data_type.order_book_query_result",
+    "hummingbot.core.data_type.order_book_message",
+]
+test_paths = ["test/hummingbot/core/data_type/test_order_book_message.py"]
