@@ -78,21 +78,27 @@ class OrderBookMessage(_OrderBookMessageBase):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, OrderBookMessage):
             return NotImplemented
-        return (self.type == other.type) and (
-            (self.has_update_id and (self.update_id == other.update_id))
-            or (self.trade_id == other.trade_id)
-        )
+        if self.type != other.type:
+            return False
+        if self.has_update_id:
+            return bool(self.update_id == other.update_id)
+        return bool(self.trade_id == other.trade_id)
+
+    def __ne__(self, other: object) -> bool:
+        # tuple defines its own __ne__, which would bypass __eq__ above.
+        result = self.__eq__(other)
+        return result if result is NotImplemented else not result
 
     def __hash__(self) -> int:
         # Hash only what __eq__ compares: equal messages must hash equal.
-        return hash((self.type, self.update_id, self.trade_id))
+        return hash((self.type, self.update_id if self.has_update_id else self.trade_id))
 
     def __lt__(self, other: "OrderBookMessage") -> bool:  # type: ignore[override]
-        return bool(
-            (self.has_update_id and other.has_update_id and self.update_id < other.update_id)
-            or (self.has_trade_id and other.has_trade_id and self.trade_id < other.trade_id)
-            or (
-                ((self.timestamp != other.timestamp) and self.timestamp < other.timestamp)  # type: ignore[operator]
-                or self.has_update_id  # same timestamp: order book messages < trade messages
-            )
-        )
+        if self.has_update_id and other.has_update_id:
+            return bool(self.update_id < other.update_id)
+        if self.has_trade_id and other.has_trade_id:
+            return bool(self.trade_id < other.trade_id)
+        # Mixed kinds: by timestamp; on a tie the order book message sorts before the trade.
+        if self.timestamp != other.timestamp:
+            return bool(self.timestamp < other.timestamp)  # type: ignore[operator]
+        return self.has_update_id and not other.has_update_id

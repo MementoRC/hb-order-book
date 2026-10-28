@@ -109,6 +109,60 @@ def test_larger_than() -> None:
     assert diff2 < trade1  # if same ts, ob messages < trade messages
 
 
+def test_diffs_with_different_update_id_are_unequal() -> None:
+    d1 = _msg(OrderBookMessageType.DIFF, {"update_id": 1}, 1.0)
+    d2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 1.0)
+    assert d1 != d2
+    assert hash(d1) != hash(d2)
+    assert len({d1, d2}) == 2
+    t1 = _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 1.0)
+    t2 = _msg(OrderBookMessageType.TRADE, {"trade_id": 2}, 1.0)
+    assert t1 != t2
+
+
+def test_ne_follows_eq_not_tuple_comparison() -> None:
+    s1 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7, "x": 1}, 1.0)
+    s2 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7}, 2.0)
+    assert s1 == s2
+    assert s1.__ne__(s2) is False
+    assert s1 != _msg(OrderBookMessageType.DIFF, {"update_id": 7}, 1.0)
+    assert s1.__ne__(object()) is NotImplemented
+
+
+def test_strict_order() -> None:
+    msgs = [
+        _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 1}, 1.0),
+        _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 2.0),
+        _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 2.0),
+        _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 1.0),
+        _msg(OrderBookMessageType.TRADE, {"trade_id": 2}, 2.0),
+        _msg(OrderBookMessageType.TRADE, {"trade_id": 3}, 3.0),
+    ]
+    for a in msgs:
+        assert not a < a
+        for b in msgs:
+            assert not (a < b and b < a)
+
+
+def test_mixed_kind_order() -> None:
+    diff = _msg(OrderBookMessageType.DIFF, {"update_id": 1}, 5.0)
+    trade_same_ts = _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 5.0)
+    assert diff < trade_same_ts
+    assert not trade_same_ts < diff
+    trade_earlier = _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 4.0)
+    assert trade_earlier < diff
+    assert not diff < trade_earlier
+
+
+def test_sort_mixed_list() -> None:
+    snap = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 1}, 1.0)
+    d2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 2.0)
+    d3 = _msg(OrderBookMessageType.DIFF, {"update_id": 3}, 3.0)
+    tr = _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 3.0)
+    assert sorted([tr, d3, snap, d2]) == [snap, d2, d3, tr]
+    assert sorted([tr, d3, snap, d2])[-1] is tr
+
+
 def test_hash_is_consistent_with_equality() -> None:
     snapshot1 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7}, 1.0)
     snapshot2 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7, "x": 1}, 2.0)
