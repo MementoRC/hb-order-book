@@ -6,7 +6,12 @@ from order_book.core.entry import OrderBookEntry, PriceLevels, truncate_overlap_
 from order_book.core.events import OrderBookEvent, OrderBookTradeEvent
 from order_book.core.message import OrderBookMessage, OrderBookMessageType
 from order_book.core.order_book import OrderBook
-from order_book.core.ports import EventPort, EventSubscriber, OrderBookProtocol
+from order_book.core.ports import (
+    EventPort,
+    EventSubscriber,
+    FramesOrderBookProtocol,
+    OrderBookProtocol,
+)
 from order_book.core.types import (
     ClientOrderBookQueryResult,
     ClientOrderBookRow,
@@ -21,6 +26,7 @@ __all__ = [
     "EventHub",
     "EventPort",
     "EventSubscriber",
+    "FramesOrderBookProtocol",
     "OrderBook",
     "OrderBookEntry",
     "OrderBookEvent",

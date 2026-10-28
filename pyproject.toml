@@ -12,6 +12,9 @@ dependencies = [
     "hb-data-type-primitives @ git+https://github.com/MementoRC/hb-data-type-primitives.git@v0.1.0",
 ]
 
+[project.optional-dependencies]
+frames = ["numpy>=1.26", "pandas>=2.1"]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
@@ -36,6 +39,9 @@ pytest-timeout = ">=2.4.0"
 ruff = "=0.15.10"
 mypy = ">=1.20.0"
 pre-commit = ">=2.15.0"
+numpy = ">=1.26"
+pandas = ">=2.1"
+pandas-stubs = ">=2.1"
 
 [tool.pixi.feature.ci.dependencies]
 ruff = "=0.15.10"
@@ -46,6 +52,9 @@ pytest-timeout = ">=2.4.0"
 bandit = ">=1.8.0"
 pre-commit = ">=2.15.0"
 hatchling = ">=1.18"
+numpy = ">=1.26"
+pandas = ">=2.1"
+pandas-stubs = ">=2.1"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
@@ -125,5 +134,10 @@ modules = [
     "hummingbot.core.data_type.order_book_row",
     "hummingbot.core.data_type.order_book_query_result",
     "hummingbot.core.data_type.order_book_message",
+    "hummingbot.core.data_type.order_book",
+    "hummingbot.core.data_type.composite_order_book",
 ]
-test_paths = ["test/hummingbot/core/data_type/test_order_book_message.py"]
+test_paths = [
+    "test/hummingbot/core/data_type/test_order_book_message.py",
+    "test/hummingbot/core/data_type/test_order_book.py",
+]

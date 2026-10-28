@@ -5,7 +5,8 @@ import time
 from bisect import bisect_right
 from collections.abc import Iterator
 from enum import Enum
-from typing import Any
+from types import ModuleType
+from typing import TYPE_CHECKING, Any
 
 from order_book.core._hub import EventHub
 from order_book.core.entry import OrderBookEntry, PriceLevels, truncate_overlap_entries
@@ -14,7 +15,23 @@ from order_book.core.message import OrderBookMessage
 from order_book.core.ports import EventPort, EventSubscriber
 from order_book.core.types import OrderBookQueryResult, OrderBookRow
 
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+
 NaN = float("nan")
+
+
+def _require_frames(member: str) -> tuple[ModuleType, ModuleType]:
+    """Import numpy and pandas lazily; fail with an actionable message if absent."""
+    try:
+        import numpy
+        import pandas
+    except ImportError as exc:
+        raise ImportError(
+            f"hb-order-book[frames] is required for {member}: pip install 'hb-order-book[frames]'"
+        ) from exc
+    return numpy, pandas
 
 
 def _entries(rows: list[OrderBookRow]) -> list[OrderBookEntry]:
@@ -23,6 +40,21 @@ def _entries(rows: list[OrderBookRow]) -> list[OrderBookEntry]:
 
 def _row(entry: OrderBookEntry) -> OrderBookRow:
     return OrderBookRow(entry.price, entry.amount, entry.update_id)
+
+
+def _rows_from_arrays(
+    bids_array: "np.ndarray[Any, Any]", asks_array: "np.ndarray[Any, Any]"
+) -> tuple[list[OrderBookRow], list[OrderBookRow], int]:
+    """Convert [price, amount, update_id] arrays; the update id is the max row id (from 0)."""
+    last_update_id = 0
+    sides: list[list[OrderBookRow]] = []
+    for array in (bids_array, asks_array):
+        rows: list[OrderBookRow] = []
+        for price, amount, update_id in array.tolist():
+            rows.append(OrderBookRow(price, amount, int(update_id)))
+            last_update_id = max(last_update_id, int(update_id))
+        sides.append(rows)
+    return sides[0], sides[1], last_update_id
 
 
 class OrderBook:
@@ -148,6 +180,36 @@ class OrderBook:
         self.apply_snapshot(snapshot.bids, snapshot.asks, snapshot.update_id)
         for diff in replay_diffs:
             self.apply_diffs(diff.bids, diff.asks, diff.update_id)
+
+    # -- frames surface (requires the ``frames`` extra) ------------------------
+    @property
+    def snapshot(self) -> "tuple[pd.DataFrame, pd.DataFrame]":
+        _, pandas = _require_frames("snapshot")
+        columns = OrderBookRow._fields
+        bids_df = pandas.DataFrame(data=list(self.bid_entries()), columns=columns, dtype="float64")
+        asks_df = pandas.DataFrame(data=list(self.ask_entries()), columns=columns, dtype="float64")
+        return bids_df, asks_df
+
+    def apply_pandas_diffs(self, bids_df: "pd.DataFrame", asks_df: "pd.DataFrame") -> None:
+        """Diff frames have columns [price, amount, update_id], all float64."""
+        _require_frames("apply_pandas_diffs")
+        self.apply_numpy_diffs(bids_df.values, asks_df.values)
+
+    def apply_numpy_diffs(
+        self, bids_array: "np.ndarray[Any, Any]", asks_array: "np.ndarray[Any, Any]"
+    ) -> None:
+        """Float64 2-D arrays with columns [price, amount, update_id]."""
+        _require_frames("apply_numpy_diffs")
+        bids, asks, last_update_id = _rows_from_arrays(bids_array, asks_array)
+        self.apply_diffs(bids, asks, last_update_id)
+
+    def apply_numpy_snapshot(
+        self, bids_array: "np.ndarray[Any, Any]", asks_array: "np.ndarray[Any, Any]"
+    ) -> None:
+        """Float64 2-D arrays with columns [price, amount, update_id]."""
+        _require_frames("apply_numpy_snapshot")
+        bids, asks, last_update_id = _rows_from_arrays(bids_array, asks_array)
+        self.apply_snapshot(bids, asks, last_update_id)
 
     # -- iteration and simulation --------------------------------------------
     def bid_entries(self) -> Iterator[OrderBookRow]:
