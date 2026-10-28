@@ -165,6 +165,20 @@ def test_int_enum_tag() -> None:
     assert rec.calls == ["t"]
 
 
+def test_equal_valued_tags_from_different_enums_meet() -> None:
+    class Other(Enum):
+        T = 1
+
+    hub = EventHub()
+    rec = _Recorder()
+    hub.add_listener(Other.T, rec.on_event)
+    hub.trigger_event(_Tag.A, "x")
+    assert rec.calls == ["x"]
+    assert hub.get_listeners(_Tag.A) == [rec.on_event]
+    hub.remove_listener(_Tag.A, rec.on_event)
+    assert hub.get_listeners(Other.T) == []
+
+
 def test_listener_added_during_dispatch_not_called() -> None:
     hub = EventHub()
     late = _Recorder()

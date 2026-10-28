@@ -136,7 +136,7 @@ class OrderBook:
         self._last_diff_uid = update_id
 
     def apply_trade(self, trade: OrderBookTradeEvent) -> None:
-        self._last_trade_price = trade.price  # type: ignore[assignment]
+        self._last_trade_price = float(trade.price)  # core stores it in a C double
         self._last_applied_trade = time.perf_counter()
         self._hub.trigger_event(OrderBookEvent.TradeEvent, trade)
 

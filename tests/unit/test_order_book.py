@@ -193,7 +193,8 @@ def test_apply_trade_sets_price_and_notifies() -> None:
     trade = OrderBookTradeEvent("BTC-USDT", 1.0, TradeType.BUY, Decimal("100"), Decimal("1"))
     book.apply_trade(trade)
     assert received == [trade]
-    assert book.last_trade_price == Decimal("100")
+    assert book.last_trade_price == 100.0
+    assert type(book.last_trade_price) is float
     assert book.last_applied_trade >= before
     assert list(book.bid_entries()) == before_bids
 
@@ -408,6 +409,8 @@ def _msg(kind: OrderBookMessageType, uid: int, bids: Any, asks: Any, ts: float) 
 def test_restore_from_snapshot_and_diffs() -> None:
     snap = _msg(OrderBookMessageType.SNAPSHOT, 10, [["10", "1"], ["9", "2"]], [["11", "1"]], 1.0)
     diffs = [
+        _msg(OrderBookMessageType.DIFF, 9, [["9", "0"]], [["11", "5"]], 0.5),  # stale
+        _msg(OrderBookMessageType.DIFF, 10, [["10", "7"]], [], 1.0),  # stale (<=)
         _msg(OrderBookMessageType.DIFF, 11, [["10", "0"]], [["12", "4"]], 2.0),
         _msg(OrderBookMessageType.DIFF, 12, [["8", "1"]], [["11", "0"]], 3.0),
     ]

@@ -29,18 +29,21 @@ class EventHub:
     """Weakly-referencing publish/subscribe hub keyed by event tag."""
 
     def __init__(self) -> None:
-        self._listeners: dict[Enum, list[_Ref]] = {}
+        # Keyed by ``tag.value`` (as core PubSub does) so equal-valued tags from different
+        # Enum classes (e.g. hummingbot's and this package's OrderBookEvent) interoperate.
+        self._listeners: dict[Any, list[_Ref]] = {}
 
     def _live(self, event_tag: Enum) -> list[tuple[_Ref, EventSubscriber]]:
         """Return live ``(ref, listener)`` pairs for ``event_tag``, pruning dead refs."""
-        refs = self._listeners.get(event_tag)
+        key = event_tag.value
+        refs = self._listeners.get(key)
         if refs is None:
             return []
         live = [(ref, listener) for ref in refs if (listener := ref()) is not None]
         if live:
-            self._listeners[event_tag] = [ref for ref, _ in live]
+            self._listeners[key] = [ref for ref, _ in live]
         else:
-            del self._listeners[event_tag]
+            del self._listeners[key]
         return live
 
     def add_listener(self, event_tag: Enum, listener: EventSubscriber) -> None:
@@ -48,16 +51,16 @@ class EventHub:
         live = self._live(event_tag)
         if any(_same(ref, new_ref) for ref, _ in live):
             return
-        self._listeners.setdefault(event_tag, []).append(new_ref)
+        self._listeners.setdefault(event_tag.value, []).append(new_ref)
 
     def remove_listener(self, event_tag: Enum, listener: EventSubscriber) -> None:
         old_ref = _make_ref(listener)
         live = self._live(event_tag)
         kept = [ref for ref, _ in live if not _same(ref, old_ref)]
         if kept:
-            self._listeners[event_tag] = kept
+            self._listeners[event_tag.value] = kept
         else:
-            self._listeners.pop(event_tag, None)
+            self._listeners.pop(event_tag.value, None)
 
     def get_listeners(self, event_tag: Enum) -> list[EventSubscriber]:
         return [listener for _, listener in self._live(event_tag)]
