@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from order_book import (
+from order_book.core.types import (
     ClientOrderBookQueryResult,
     ClientOrderBookRow,
     OrderBookQueryResult,

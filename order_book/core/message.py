@@ -4,7 +4,7 @@ from enum import Enum
 from functools import total_ordering
 from typing import Any, NamedTuple
 
-from order_book.types import OrderBookRow
+from order_book.core.types import OrderBookRow
 
 
 class OrderBookMessageType(Enum):

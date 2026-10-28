@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from data_type_primitives import TradeType
 
-from order_book import OrderBookEvent, OrderBookTradeEvent
+from order_book.core.events import OrderBookEvent, OrderBookTradeEvent
 
 
 def test_order_book_event_values() -> None:
