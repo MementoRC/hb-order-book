@@ -38,7 +38,8 @@ Intentional divergences from hummingbot core are listed in docs/divergences.md.
 
 ## Dependency rule
 
-The only runtime dependency is `hb-data-type-primitives` (git tag `v0.1.0`).
+The only runtime dependency is `hb-data-type-primitives` (git tag `v0.4.0`).
+The six order-book value types (`OrderBookRow`, `ClientOrderBookRow`, `OrderBookQueryResult`, `ClientOrderBookQueryResult`, `OrderBookMessageType`, `OrderBookMessage`) are defined in `data_type_primitives` and re-exported here.
 Never imports `hummingbot` (enforced by import-linter via `pixi run lint-imports`).
 
 ## Ownership
