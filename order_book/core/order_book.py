@@ -123,14 +123,16 @@ class OrderBook:
         self, bids: list[OrderBookRow], asks: list[OrderBookRow], update_id: int
     ) -> None:
         best_bid = best_ask = NaN
-        self._bid_book.clear()
-        self._ask_book.clear()
-        for bid in _entries(bids):
-            self._bid_book.insert_if_absent(bid)  # first wins, like std::set::insert
+        bid_entries = _entries(bids)
+        ask_entries = _entries(asks)
+        # Bulk build: first wins, like std::set::insert; one sort per side.
+        self._bid_book.replace_all(bid_entries)
+        self._ask_book.replace_all(ask_entries)
+        # core tracks the best price over every row (duplicates included), NaN-seeded.
+        for bid in bid_entries:
             if not (bid.price <= best_bid):
                 best_bid = bid.price
-        for ask in _entries(asks):
-            self._ask_book.insert_if_absent(ask)
+        for ask in ask_entries:
             if not (ask.price >= best_ask):
                 best_ask = ask.price
 
