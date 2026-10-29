@@ -1,3 +1,4 @@
+import functools
 import gc
 import logging
 from enum import Enum
@@ -177,6 +178,59 @@ def test_equal_valued_tags_from_different_enums_meet() -> None:
     assert hub.get_listeners(_Tag.A) == [rec.on_event]
     hub.remove_listener(_Tag.A, rec.on_event)
     assert hub.get_listeners(Other.T) == []
+
+
+def test_listener_removed_during_dispatch_still_called_once() -> None:
+    # Dispatch iterates a snapshot, so a listener removed mid-dispatch still gets this event
+    # but not the next one.
+    hub = EventHub()
+    victim = _Recorder()
+
+    def remover(_: Any) -> None:
+        hub.remove_listener(_Tag.A, victim.on_event)
+
+    hub.add_listener(_Tag.A, remover)
+    hub.add_listener(_Tag.A, victim.on_event)
+    hub.trigger_event(_Tag.A, 1)
+    assert victim.calls == [1]
+    hub.trigger_event(_Tag.A, 2)
+    assert victim.calls == [1]
+
+
+def test_partial_listener_works_while_referenced() -> None:
+    hub = EventHub()
+    seen: list[Any] = []
+    listener = functools.partial(lambda sink, msg: sink.append(msg), seen)
+    hub.add_listener(_Tag.A, listener)
+    hub.trigger_event(_Tag.A, 1)
+    assert seen == [1]
+    del listener
+    gc.collect()
+    assert hub.get_listeners(_Tag.A) == []
+
+
+def test_builtin_bound_method_listener_is_dropped_immediately() -> None:
+    # ``seen.append`` is a fresh builtin-method object with no owner to keep it alive, so its
+    # weak reference dies at once and the listener is silently never called.
+    hub = EventHub()
+    seen: list[Any] = []
+    hub.add_listener(_Tag.A, seen.append)
+    gc.collect()
+    assert hub.get_listeners(_Tag.A) == []
+    hub.trigger_event(_Tag.A, 1)
+    assert seen == []
+
+
+def test_non_weakrefable_listener_rejected() -> None:
+    class Slotted:
+        __slots__ = ()
+
+        def __call__(self, message: Any) -> None:
+            pass
+
+    hub = EventHub()
+    with pytest.raises(TypeError, match="weak reference"):
+        hub.add_listener(_Tag.A, Slotted())
 
 
 def test_listener_added_during_dispatch_not_called() -> None:

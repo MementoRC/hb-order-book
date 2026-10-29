@@ -89,6 +89,7 @@ python_functions = "test_*"
 markers = [
     "unit: unit tests",
     "integration: integration tests",
+    "divergence: asserts an intentional divergence from hummingbot core (xfail against core)",
 ]
 timeout = 30
 addopts = "--strict-markers --strict-config -v"

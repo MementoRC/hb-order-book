@@ -3,6 +3,7 @@
 from bisect import bisect_left, insort
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
+from math import isnan
 from typing import Any
 
 
@@ -52,10 +53,20 @@ class PriceLevels:
         self._prices: list[float] = []
 
     def insert(self, entry: OrderBookEntry) -> None:
-        """Insert ``entry``, replacing any existing entry at the same price."""
+        """Insert ``entry``, replacing any existing entry at the same price.
+
+        Raises ValueError for a NaN price (it breaks the bisect/dict pairing; core is undefined).
+        """
+        if isnan(entry.price):
+            raise ValueError("NaN price is not allowed in PriceLevels")
         if entry.price not in self._entries:
             insort(self._prices, entry.price)
         self._entries[entry.price] = entry
+
+    def insert_if_absent(self, entry: OrderBookEntry) -> None:
+        """Insert ``entry`` unless its price is already present (``std::set::insert``)."""
+        if entry.price not in self._entries:
+            self.insert(entry)
 
     def remove(self, price: float) -> bool:
         """Remove the entry at ``price``; return False if there was none."""
@@ -95,18 +106,17 @@ class PriceLevels:
 
     def ascending(self) -> Iterator[OrderBookEntry]:
         """Iterate entries from lowest to highest price (snapshot of current prices)."""
-        return (self._entries[p] for p in tuple(self._prices))
+        return iter(tuple(self._entries[p] for p in self._prices))
 
     def descending(self) -> Iterator[OrderBookEntry]:
-        """Iterate entries from highest to lowest price (snapshot of current prices)."""
-        return (self._entries[p] for p in tuple(reversed(self._prices)))
+        """Iterate entries from highest to lowest price (snapshot of current entries)."""
+        return iter(tuple(self._entries[p] for p in reversed(self._prices)))
 
     def replace_all(self, entries: Iterable[OrderBookEntry]) -> None:
-        """Replace the whole content with ``entries`` (later duplicates win)."""
+        """Replace the whole content with ``entries`` (first duplicate wins, like a set)."""
         self.clear()
         for entry in entries:
-            self._entries[entry.price] = entry
-        self._prices = sorted(self._entries)
+            self.insert_if_absent(entry)
 
 
 def truncate_overlap_entries(bids: PriceLevels, asks: PriceLevels, dex: bool) -> None:
