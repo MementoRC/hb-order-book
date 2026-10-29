@@ -4,12 +4,13 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-import numpy as np
-import pandas as pd
 import pytest
 
 import order_book
 from order_book import CompositeOrderBook, FramesOrderBookProtocol, OrderBook, OrderBookRow
+
+np = pytest.importorskip("numpy")
+pd = pytest.importorskip("pandas")
 
 
 def _arrays() -> tuple["np.ndarray[Any, Any]", "np.ndarray[Any, Any]"]:
