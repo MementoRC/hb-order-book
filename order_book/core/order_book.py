@@ -126,11 +126,11 @@ class OrderBook:
         self._bid_book.clear()
         self._ask_book.clear()
         for bid in _entries(bids):
-            self._bid_book.insert(bid)
+            self._bid_book.insert_if_absent(bid)  # first wins, like std::set::insert
             if not (bid.price <= best_bid):
                 best_bid = bid.price
         for ask in _entries(asks):
-            self._ask_book.insert(ask)
+            self._ask_book.insert_if_absent(ask)
             if not (ask.price >= best_ask):
                 best_ask = ask.price
 

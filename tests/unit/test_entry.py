@@ -116,7 +116,7 @@ class TestPriceLevels:
                 OrderBookEntry(2.0, 3.0, 2),
             ]
         )
-        assert rows(p) == [(1.0, 1.0, 1), (2.0, 3.0, 2)]
+        assert rows(p) == [(1.0, 1.0, 1), (2.0, 1.0, 1)]
         assert 9.0 not in p
 
     def test_iteration_tolerates_mutation(self) -> None:
@@ -127,6 +127,49 @@ class TestPriceLevels:
             p.remove(e.price)
         assert seen == [3.0, 2.0, 1.0]
         assert not p
+
+
+def test_insert_if_absent_keeps_first() -> None:
+    p = levels((1.0, 1.0, 1))
+    p.insert_if_absent(OrderBookEntry(1.0, 5.0, 7))
+    p.insert_if_absent(OrderBookEntry(2.0, 5.0, 8))
+    assert rows(p) == [(1.0, 1.0, 1), (2.0, 5.0, 8)]
+
+
+def test_negative_zero_is_same_level_as_zero() -> None:
+    p = levels((0.0, 1.0, 1))
+    p.insert(OrderBookEntry(-0.0, 2.0, 2))
+    assert len(p) == 1
+    assert -0.0 in p
+    assert p.get(0.0) == OrderBookEntry(-0.0, 2.0, 2)
+    p.insert_if_absent(OrderBookEntry(-0.0, 9.0, 3))
+    assert p.get(0.0) == OrderBookEntry(-0.0, 2.0, 2)
+    assert p.remove(-0.0) is True
+    assert not p
+
+
+def test_nan_price_rejected() -> None:
+    p = levels((1.0, 1.0, 1))
+    with pytest.raises(ValueError, match="NaN"):
+        p.insert(OrderBookEntry(float("nan"), 1.0, 1))
+    with pytest.raises(ValueError, match="NaN"):
+        p.insert_if_absent(OrderBookEntry(float("nan"), 1.0, 1))
+    assert rows(p) == [(1.0, 1.0, 1)]
+
+
+def test_iteration_survives_removing_unyielded_price() -> None:
+    p = levels((1.0, 1.0, 1), (2.0, 1.0, 2), (3.0, 1.0, 3))
+    seen = []
+    for e in p.ascending():
+        seen.append(e.price)
+        p.remove(3.0)
+    assert seen == [1.0, 2.0, 3.0]
+    assert rows(p) == [(1.0, 1.0, 1), (2.0, 1.0, 2)]
+    seen = []
+    for e in p.descending():
+        seen.append(e.price)
+        p.remove(1.0)
+    assert seen == [2.0, 1.0]
 
 
 class TestTruncate:

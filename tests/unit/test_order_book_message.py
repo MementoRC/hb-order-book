@@ -2,6 +2,8 @@
 
 import time
 
+import pytest
+
 from order_book.core.message import OrderBookMessage, OrderBookMessageType
 from order_book.core.types import OrderBookRow
 
@@ -109,6 +111,7 @@ def test_larger_than() -> None:
     assert diff2 < trade1  # if same ts, ob messages < trade messages
 
 
+@pytest.mark.divergence  # core __eq__ falls through to trade_id (-1 == -1) and __hash__ raises
 def test_diffs_with_different_update_id_are_unequal() -> None:
     d1 = _msg(OrderBookMessageType.DIFF, {"update_id": 1}, 1.0)
     d2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 1.0)
@@ -129,6 +132,7 @@ def test_ne_follows_eq_not_tuple_comparison() -> None:
     assert s1.__ne__(object()) is NotImplemented
 
 
+@pytest.mark.divergence  # core __lt__: a snapshot/diff is < anything, even itself
 def test_strict_order() -> None:
     msgs = [
         _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 1}, 1.0),
@@ -154,6 +158,32 @@ def test_mixed_kind_order() -> None:
     assert not diff < trade_earlier
 
 
+def test_derived_comparisons_between_diffs() -> None:
+    # The message is a tuple subclass, so tuple's own >, <= and >= are inherited and
+    # total_ordering (which only fills missing methods) never replaces them; they compare the
+    # content dicts and raise TypeError. Core's namedtuple base behaves the same.
+    d1 = _msg(OrderBookMessageType.DIFF, {"update_id": 1}, 1.0)
+    d2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 2.0)
+    with pytest.raises(TypeError):
+        _ = d2 > d1
+    with pytest.raises(TypeError):
+        _ = d1 <= d2
+    with pytest.raises(TypeError):
+        _ = d2 >= d1
+
+
+def test_derived_comparisons_between_diff_and_trade() -> None:
+    diff = _msg(OrderBookMessageType.DIFF, {"update_id": 1}, 1.0)
+    trade = _msg(OrderBookMessageType.TRADE, {"trade_id": 1}, 2.0)
+    assert diff < trade  # only __lt__ is custom
+    with pytest.raises(TypeError):
+        _ = trade > diff
+    with pytest.raises(TypeError):
+        _ = diff <= trade
+    with pytest.raises(TypeError):
+        _ = trade >= diff
+
+
 def test_sort_mixed_list() -> None:
     snap = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 1}, 1.0)
     d2 = _msg(OrderBookMessageType.DIFF, {"update_id": 2}, 2.0)
@@ -163,6 +193,7 @@ def test_sort_mixed_list() -> None:
     assert sorted([tr, d3, snap, d2])[-1] is tr
 
 
+@pytest.mark.divergence  # core __hash__ calls hash(a, b, c), which always raises TypeError
 def test_hash_is_consistent_with_equality() -> None:
     snapshot1 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7}, 1.0)
     snapshot2 = _msg(OrderBookMessageType.SNAPSHOT, {"update_id": 7, "x": 1}, 2.0)

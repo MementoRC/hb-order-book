@@ -63,6 +63,24 @@ def traded_bids(book: CompositeOrderBook) -> list[OrderBookRow]:
     return list(book.traded_order_book.bid_entries())
 
 
+def test_same_timestamp_sell_at_or_above_buy_erases_the_sell() -> None:
+    # The traded book truncates its crossed SELL (bid) / BUY (ask) fills; on an update_id tie
+    # core erases the bid, so the SELL goes and the BUY survives (not the other way round).
+    book = make_book()
+    book.record_filled_order(buy(10, 1, 100.0))
+    book.record_filled_order(sell(11, 1, 100.0))
+    assert traded_asks(book) == [R(10, 1, 100)]
+    assert traded_bids(book) == []
+
+
+def test_later_sell_at_or_above_buy_erases_the_buy() -> None:
+    book = make_book()
+    book.record_filled_order(buy(10, 1, 100.0))
+    book.record_filled_order(sell(10, 1, 101.0))
+    assert traded_asks(book) == []
+    assert traded_bids(book) == [R(10, 1, 101)]
+
+
 def test_constructor_ignores_order_book_and_is_protocol() -> None:
     other = make_book()
     book = CompositeOrderBook(other)

@@ -406,6 +406,7 @@ def _msg(kind: OrderBookMessageType, uid: int, bids: Any, asks: Any, ts: float) 
     return OrderBookMessage(kind, content, ts)
 
 
+@pytest.mark.divergence  # core's __lt__ puts every snapshot/diff first, so it replays stale diffs
 def test_restore_from_snapshot_and_diffs() -> None:
     snap = _msg(OrderBookMessageType.SNAPSHOT, 10, [["10", "1"], ["9", "2"]], [["11", "1"]], 1.0)
     diffs = [
