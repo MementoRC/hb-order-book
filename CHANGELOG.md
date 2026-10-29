@@ -14,3 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `frames` extra: `snapshot`, `apply_pandas_diffs`, `apply_numpy_diffs`,
   `apply_numpy_snapshot` (numpy/pandas, lazily imported) (#7).
 - `order_book.hb_compat` drop-in surface for hummingbot (#8).
+
+### Changed
+
+- The six order-book value types are now re-exported from hb-data-type-primitives v0.4.0 instead of defined locally (#12).

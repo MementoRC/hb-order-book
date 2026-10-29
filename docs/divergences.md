@@ -5,6 +5,10 @@ and deliberately does not reproduce core defects. Tests asserting a divergence c
 `@pytest.mark.divergence`, so a run against core can deselect or xfail them
 (`-m "not divergence"`). Paths are relative to `hummingbot/core/data_type/`.
 
+Note on items 1-2: since #12 the `OrderBookMessage` class is defined in `data_type_primitives`
+(hb-data-type-primitives v0.4.0, `data_type_primitives/order_book.py`) carrying the same
+semantics. hb-order-book re-exports it, and its `@pytest.mark.divergence` tests remain the guard.
+
 | # | Divergence | Core location | Rationale |
 |---|---|---|---|
 | 1 | `OrderBookMessage.__hash__` hashes the tuple `(type, id)` | `order_book_message.py:82` | Core calls `hash(a, b, c)`, which always raises `TypeError`. |
