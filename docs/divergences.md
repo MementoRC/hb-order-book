@@ -17,7 +17,9 @@ semantics. hb-order-book re-exports it, and its `@pytest.mark.divergence` tests 
 | 4 | `CompositeOrderBook.get_price` raises `OSError` when every level is netted away | `composite_order_book.pyx:184-194` | Core leaks `StopIteration` from `next()` on an exhausted generator. |
 | 5 | NaN prices are rejected with `ValueError` in `PriceLevels.insert` | `order_book.pyx:111-118`, `OrderBookEntry.cpp` | A NaN breaks `std::set` ordering; behaviour in core is undefined. |
 
-## Draft core bug report (not filed)
+## Core bug report
+
+Filed as [MementoRC/hummingbot#82](https://github.com/MementoRC/hummingbot/issues/82), tracked from the core-closure plan (MementoRC/hummingbot#75). The text below is the report as filed.
 
 Three defects in `hummingbot/core/data_type/order_book_message.py`.
 
