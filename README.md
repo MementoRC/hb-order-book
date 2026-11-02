@@ -42,6 +42,28 @@ The only runtime dependency is `hb-data-type-primitives` (git tag `v0.4.0`).
 The six order-book value types (`OrderBookRow`, `ClientOrderBookRow`, `OrderBookQueryResult`, `ClientOrderBookQueryResult`, `OrderBookMessageType`, `OrderBookMessage`) are defined in `data_type_primitives` and re-exported here.
 Never imports `hummingbot` (enforced by import-linter via `pixi run lint-imports`).
 
+## API stability
+
+The public API is:
+
+- `order_book.hb_compat`: the only path hummingbot may import from. Module and class names
+  mirror `hummingbot.core.data_type.*` (`order_book`, `composite_order_book`,
+  `order_book_row`, `order_book_query_result`, `order_book_message`) and the
+  `OrderBookEvent` / `OrderBookTradeEvent` events. Signatures match core.
+- The names in `order_book.__all__`, for direct (non-hummingbot) consumers.
+
+Everything else (`order_book.core.*` internals, `order_book.adapters`, underscore names) is
+private and may change without notice.
+
+Versioning follows SemVer. While on `0.x`, a breaking change to the public API bumps the minor
+version and is listed in `CHANGELOG.md`; a behaviour change relative to hummingbot core is
+also recorded in docs/divergences.md with a `@pytest.mark.divergence` test. Releases are
+signed `vX.Y.Z` tags on `development`; consumers pin a tag, never a branch head.
+
+Out of scope: `order_book_tracker`, `order_book_tracker_entry`,
+`order_book_tracker_data_source` and the API data sources stay in hummingbot core and use
+the `hb_compat` `OrderBook`.
+
 ## Ownership
 
 Implementation is owned by the hb-order-book session.
