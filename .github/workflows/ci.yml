@@ -36,7 +36,7 @@ jobs:
       editable-install: true
       package-path: "."
       allowed-licenses: "MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, PSF-2.0, LGPL-3.0"
-      pip-policy-check: "warn"
+      pip-policy-check: "enforce"
 
   branch-policy:
     name: "Branch Policy"

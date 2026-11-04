@@ -105,7 +105,7 @@ class OrderBookProtocol(Protocol):
 
 @runtime_checkable
 class FramesOrderBookProtocol(OrderBookProtocol, Protocol):
-    """``OrderBookProtocol`` plus the numpy/pandas surface (``hb-order-book[frames]``)."""
+    """``OrderBookProtocol`` plus the numpy/pandas surface (requires pandas and numpy)."""
 
     @property
     def snapshot(self) -> "tuple[pd.DataFrame, pd.DataFrame]": ...

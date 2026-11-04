@@ -144,7 +144,7 @@ def test_missing_extra_raises_import_error(
         else:
             book.apply_numpy_snapshot(empty, empty)
     assert str(info.value) == (
-        f"hb-order-book[frames] is required for {member}: pip install 'hb-order-book[frames]'"
+        f"pandas and numpy are required for {member}: install pandas and numpy (conda-forge)"
     )
     assert info.value.__cause__ is not None
 
