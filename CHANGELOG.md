@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `apply_numpy_snapshot` (numpy/pandas, lazily imported) (#7).
 - `order_book.hb_compat` drop-in surface for hummingbot (#8).
 
+### Removed
+
+- The `frames` pip extra (`hb-order-book[frames]`). hb-* packages are conda-only: install `pandas` and `numpy` from conda-forge to use the DataFrame helpers. (#19)
+
 ### Changed
 
 - The six order-book value types are now re-exported from hb-data-type-primitives v0.4.0 instead of defined locally (#12).

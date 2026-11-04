@@ -29,7 +29,7 @@ def _require_frames(member: str) -> tuple[ModuleType, ModuleType]:
         import pandas
     except ImportError as exc:
         raise ImportError(
-            f"hb-order-book[frames] is required for {member}: pip install 'hb-order-book[frames]'"
+            f"pandas and numpy are required for {member}: install pandas and numpy (conda-forge)"
         ) from exc
     return numpy, pandas
 

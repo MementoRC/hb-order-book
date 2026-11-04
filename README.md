@@ -3,15 +3,16 @@
 Hummingbot OrderBook extracted as a standalone L2 domain sub-package
 (import name `order_book`).
 
-## Installation / extras
+## Installation
+
+hb-* packages are conda-only; there is no pip extra.
 
 ```bash
-pip install hb-order-book             # core book, no numpy/pandas
-pip install 'hb-order-book[frames]'   # adds snapshot, apply_pandas_diffs, apply_numpy_diffs, apply_numpy_snapshot
+pixi add pandas numpy   # needed for snapshot, apply_pandas_diffs, apply_numpy_diffs, apply_numpy_snapshot
 ```
 
-Without the `frames` extra those four members raise `ImportError` naming the extra.
-Currently numpy and pandas arrive transitively through `hb-data-type-primitives`, so the extra is declarative until that changes.
+The DataFrame helpers need pandas and numpy from conda-forge. Without them those four members raise `ImportError` naming both packages.
+Currently numpy and pandas arrive transitively through `hb-data-type-primitives`.
 
 ## Usage
 
@@ -32,7 +33,7 @@ L2 (see ADR 0001). Layout:
   `OrderBookEntry`/price levels, `OrderBookProtocol`, and its own `EventHub` (`core/_hub.py`)
 - `order_book.adapters` - concrete adapters
 - `order_book.hb_compat` - drop-in compatibility layer for hummingbot; never imports hummingbot
-- `frames` extra - numpy/pandas-backed `snapshot` and diff helpers
+- DataFrame helpers - numpy/pandas-backed `snapshot` and diff helpers (pandas and numpy from conda-forge)
 
 Intentional divergences from hummingbot core are listed in docs/divergences.md.
 

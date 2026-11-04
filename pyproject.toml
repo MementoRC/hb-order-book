@@ -12,9 +12,6 @@ dependencies = [
     "hb-data-type-primitives @ git+https://github.com/MementoRC/hb-data-type-primitives.git@v0.4.0",
 ]
 
-[project.optional-dependencies]
-frames = ["numpy>=1.26", "pandas>=2.1"]
-
 [tool.hatch.metadata]
 allow-direct-references = true
 
