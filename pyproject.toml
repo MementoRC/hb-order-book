@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
 dependencies = [
     "hb-data-type-primitives @ git+https://github.com/MementoRC/hb-data-type-primitives.git@v0.4.0",
+    "hb-event-bus @ git+https://github.com/MementoRC/hb-event-bus.git@v0.3.0",
 ]
 
 [tool.hatch.metadata]

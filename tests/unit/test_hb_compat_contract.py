@@ -34,10 +34,6 @@ def test_package_reexports_every_public_name() -> None:
         assert getattr(order_book.hb_compat, name) is getattr(order_book.core, name)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="hb-order-book#23: re-export event_bus.OrderBookEvent once hb-event-bus#42 is released",
-)
 def test_order_book_event_is_canonical_event_bus_class() -> None:
     from event_bus import OrderBookEvent
 

@@ -1,15 +1,12 @@
 """Order book events."""
 
 from decimal import Decimal
-from enum import Enum
 from typing import NamedTuple
 
 from data_type_primitives import TradeType
+from event_bus import OrderBookEvent
 
-
-class OrderBookEvent(int, Enum):
-    TradeEvent = 901
-    OrderBookDataSourceUpdateEvent = 904
+__all__ = ["OrderBookEvent", "OrderBookTradeEvent"]
 
 
 class OrderBookTradeEvent(NamedTuple):
