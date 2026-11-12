@@ -75,9 +75,9 @@ format-check = "ruff format --check order_book tests"
 typecheck = "mypy order_book"
 build = "hatchling build"
 coverage = "pytest tests/ --cov=order_book --cov-report=term-missing"
-lint-imports = "lint-imports"
-quality = { depends-on = ["lint", "format-check", "typecheck"] }
-check = { depends-on = ["quality", "lint-imports", "coverage"] }
+lint-boundaries = "lint-imports"
+quality = { depends-on = ["lint", "format-check", "typecheck", "lint-boundaries"] }
+check = { depends-on = ["quality", "coverage"] }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
