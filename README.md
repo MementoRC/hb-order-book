@@ -41,7 +41,7 @@ Intentional divergences from hummingbot core are listed in docs/divergences.md.
 
 The only runtime dependency is `hb-data-type-primitives` (git tag `v0.4.0`).
 The six order-book value types (`OrderBookRow`, `ClientOrderBookRow`, `OrderBookQueryResult`, `ClientOrderBookQueryResult`, `OrderBookMessageType`, `OrderBookMessage`) are defined in `data_type_primitives` and re-exported here.
-Never imports `hummingbot` (enforced by import-linter via `pixi run lint-imports`).
+Never imports `hummingbot` (enforced by import-linter via `pixi run lint-boundaries`).
 
 ## API stability
 
@@ -76,8 +76,8 @@ pixi run test      # pytest with coverage (fail_under=100)
 pixi run lint      # ruff check
 pixi run format    # ruff format
 pixi run typecheck # mypy
-pixi run lint-imports  # import-linter contracts
-pixi run check     # lint + format-check + typecheck + lint-imports + coverage
+pixi run lint-boundaries  # import-linter contracts
+pixi run check     # lint + format-check + typecheck + lint-boundaries + coverage
 ```
 
 Work in `.worktrees/<branch>` cut from `origin/development`; open PRs against `development`.
