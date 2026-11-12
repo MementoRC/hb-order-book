@@ -8,7 +8,9 @@ one superseded core module and re-exports the classes under core's names:
 - ``order_book_message``: ``hummingbot.core.data_type.order_book_message``
 - ``order_book``: ``hummingbot.core.data_type.order_book``
 - ``composite_order_book``: ``hummingbot.core.data_type.composite_order_book``
-- ``events``: ``OrderBookEvent`` and ``OrderBookTradeEvent`` from ``hummingbot.core.event.events``
+- ``events``: ``OrderBookTradeEvent`` mirrors ``hummingbot.core.event.events``;
+  ``OrderBookEvent`` is this package's local definition (``order_book.core.events``), pending
+  convergence on ``event_bus.OrderBookEvent`` (hb-order-book#23)
 """
 
 from order_book.hb_compat.composite_order_book import CompositeOrderBook
