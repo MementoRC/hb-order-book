@@ -83,7 +83,10 @@ build = "hatchling build"
 coverage = "pytest tests/ --cov=order_book --cov-report=term-missing"
 lint-boundaries = "lint-imports"
 bandit-security = "bandit -c pyproject.toml -r order_book --severity-level medium --confidence-level medium"
-safety-check = "pip-audit --skip-editable"
+# TODO(remove when conda-forge dnspython>=2.9.2): CVE-2026-128089
+# dnspython is transitive dev/CI-only (via email-validator), not a
+# runtime dep of order_book; no fixed build on conda-forge yet.
+safety-check = "pip-audit --skip-editable --ignore-vuln CVE-2026-128089"
 quality = { depends-on = ["lint", "format-check", "typecheck", "lint-boundaries", "bandit-security"] }
 check = { depends-on = ["quality", "coverage"] }
 
